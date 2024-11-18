@@ -1,36 +1,22 @@
 {
-  "name": "site-tahoe",
+  "name": "tahoe-ecommerce",
   "version": "1.0.0",
-  "description": "Le site web de Tahoe dans lequel on vend des vetements, il est equipe d'un dashboard administrateur et de plien de fonctionnalites utiles",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Famous-Tech/Site_tahoe.git"
-  },
-  "keywords": [
-    "EXPRESS",
-    "Famous-Tech",
-    "Lord___Z",
-    "Site",
-    "web",
-    "WEBSITE"
-  ],
-  "author": "Famous-Tech",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Famous-Tech/Site_tahoe/issues"
-  },
-  "homepage": "https://github.com/Famous-Tech/Site_tahoe#readme",
   "dependencies": {
-    "body-parser": "^1.20.3",
-    "connect-flash": "^0.1.1",
-    "express": "^4.21.1",
-    "express-cookie": "^4.17.1",
-    "express-session": "^1.18.1",
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "sequelize": "^6.37.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.18.0",
+    "connect-pg-simple": "^9.0.1",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
     "multer": "^1.4.5-lts.1",
-    "pg": "^8.13.1"
+    "winston": "^3.11.0",
+    "dotenv": "^16.4.5",
+    "joi": "^17.12.2",
+    "compression": "^1.7.4",
+    "express-validator": "^7.0.1"
   }
 }
