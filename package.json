@@ -1,0 +1,36 @@
+{
+  "name": "site-tahoe",
+  "version": "1.0.0",
+  "description": "Le site web de Tahoe dans lequel on vend des vetements, il est equipe d'un dashboard administrateur et de plien de fonctionnalites utiles",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Famous-Tech/Site_tahoe.git"
+  },
+  "keywords": [
+    "EXPRESS",
+    "Famous-Tech",
+    "Lord___Z",
+    "Site",
+    "web",
+    "WEBSITE"
+  ],
+  "author": "Famous-Tech",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Famous-Tech/Site_tahoe/issues"
+  },
+  "homepage": "https://github.com/Famous-Tech/Site_tahoe#readme",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "connect-flash": "^0.1.1",
+    "express": "^4.21.1",
+    "express-cookie": "^4.17.1",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.13.1"
+  }
+}
