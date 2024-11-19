@@ -1,51 +1,125 @@
+require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const compression = require('compression');
-const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
-const { rateLimiter, helmetConfig } = require('./config/security');
-const sequelize = require('./config/database');
+const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const bodyParser = require('body-parser');
+const shopHandler = require('./shop').handler;
 
 const app = express();
+const port = process.env.PORT || 3000;
 
-// Middleware
-app.use(express.json());
-app.use(cors());
-app.use(compression());
-app.use(helmetConfig);
-app.use(rateLimiter);
+app.use(helmet());
 
-// Session configuration
-app.use(session({
-  store: new pgSession({
-    conString: process.env.DATABASE_URL
-  }),
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 heures
+// En-têtes HTTP
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
+
+// Bloquer les requêtes curl et wget
+app.use((req, res, next) => {
+  const userAgent = req.headers['user-agent'];
+  if (userAgent && (userAgent.includes('curl') || userAgent.includes('Wget') || userAgent.includes('nmap'))) {
+    return res.status(403).send('Accès interdit');
+  }
+  next();
+});
+
+// Limite de taux
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+});
+app.use(limiter);
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// Redirection des routes
+app.use((req, res, next) => {
+  const routes = {
+    '/index.html': '/',
+    '/faq.html': '/faq',
+    '/admin.html': '/admin',
+    '/command.html': '/commander',
+    '/politique.html': '/Politique-de-confidentialite',
+    '/merci.html': '/merci',
+    '/services.html' : '/services'
+  };
+
+  if (routes[req.url]) {
+    res.redirect(301, routes[req.url]);
+  } else {
+    next();
+  }
+});
+
+// Routes pour les pages HTML
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/faq', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'faq.html'));
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.get('/commander', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'command.html'));
+});
+
+app.get('/Politique-de-confidentialite', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'politique.html'));
+});
+
+app.get('/services', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'services.html'));
+});
+
+app.get('/merci', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'merci.html'));
+});
+
+// Route pour le shop
+app.get('/shop', async (req, res) => {
+  try {
+    const result = await shopHandler({ httpMethod: 'GET', queryStringParameters: req.query });
+    res.status(result.statusCode).send(result.body);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Utilisation du dossier "public"
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    if (path.includes('.env') || path.includes('index.js')) {
+      res.status(403).send('Accès interdit');
+    }
   }
 }));
 
-// Routes
-app.use('/api/products', require('./routes/products'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/admin', require('./routes/admin'));
-
-// Error handling
+// Gestion des erreurs
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Une erreur est survenue!' });
+  res.status(500).send('Something broke!');
 });
 
-// Database sync and server start
-sequelize.sync({ alter: true }).then(() => {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Serveur démarré sur le port ${PORT}`);
-  });
+// Gestion des routes non trouvées
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
+
+app.listen(port, () => {
+  console.log(`Serveur démarré sur le port ${port}`);
+  console.log(`FAMOUS-TECH-GROUP site launched, in local get it at : http://localhost:${port}`);
+});
+
+module.exports = app; // Pour les tests
