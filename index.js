@@ -1,68 +1,51 @@
 const express = require('express');
-const path = require('path');
-const morgan = require('morgan');
-const multer = require('multer');
-const flash = require('connect-flash');
+const cors = require('cors');
+const compression = require('compression');
 const session = require('express-session');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
-const { Pool } = require('pg');
+const pgSession = require('connect-pg-simple')(session);
+const { rateLimiter, helmetConfig } = require('./config/security');
+const sequelize = require('./config/database');
 
-// Initialisation de l'application Express
 const app = express();
 
-// Configuration de la base de données PostgreSQL
-const pool = new Pool({
-  user: '',
-  host: '',
-  database: '',
-  password: '',
-  port: 5432,
+// Middleware
+app.use(express.json());
+app.use(cors());
+app.use(compression());
+app.use(helmetConfig);
+app.use(rateLimiter);
+
+// Session configuration
+app.use(session({
+  store: new pgSession({
+    conString: process.env.DATABASE_URL
+  }),
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 heures
+  }
+}));
+
+// Routes
+app.use('/api/products', require('./routes/products'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin', require('./routes/admin'));
+
+// Error handling
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Une erreur est survenue!' });
 });
 
-// Middlewares
-app.use(morgan('dev')); // Logging des requêtes HTTP
-app.use(bodyParser.urlencoded({ extended: false })); // Parsing des requêtes URL-encoded
-app.use(bodyParser.json()); // Parsing des requêtes JSON
-app.use(cookieParser()); // Parsing des cookies
-app.use(session({ secret: 'your_secret_key', resave: false, saveUninitialized: false })); // Gestion des sessions
-app.use(flash()); // Gestion des messages flash
-app.use(helmet()); // Sécurité HTTP
-
-// Configuration de Multer pour le téléchargement de fichiers
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage: storage });
-
-// Configuration du rate limiter pour prévenir les attaques DDoS
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limite chaque IP à 100 requêtes par windowMs
-});
-app.use(limiter);
-
-// Routes API
-const apiRoutes = require('./routes/api');
-app.use('/api', apiRoutes);
-
-// Routes statiques
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Route par défaut
-app.get('/', (req, res) => {
-  res.send('Bienvenue sur le site e-commerce de Tahoe!');
-});
-
-// Démarrage du serveur
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Serveur en cours d'exécution sur le port ${PORT}`);
+// Database sync and server start
+sequelize.sync({ alter: true }).then(() => {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Serveur démarré sur le port ${PORT}`);
+  });
 });

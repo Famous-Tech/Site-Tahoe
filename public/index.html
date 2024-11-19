@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAHOE - Mode Haïtienne Premium</title>
+    
+    <!-- Imports des polices -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- GSAP pour les animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    
+    <!-- Three.js pour les effets 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF3366;
+            --secondary: #2A2A2A;
+            --accent: #FFD700;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .loader {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            background: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .navbar {
+            position: fixed;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 300;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 10%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            width: 50%;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(255, 51, 102, 0.3);
+        }
+
+        .canvas-container {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+        }
+
+        .products {
+            padding: 5rem 10%;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .product-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 300px;
+            background: #2A2A2A;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-content {
+                width: 100%;
+                text-align: center;
+            }
+
+            .canvas-container {
+                display: none;
+            }
+
+            .navbar {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <img src="/api/placeholder/150/150" alt="Loading..." />
+    </div>
+
+    <nav class="navbar">
+        <a href="#" class="logo">TAHOE</a>
+        <div class="nav-links">
+            <a href="#home">Accueil</a>
+            <a href="#shop">Boutique</a>
+            <a href="#about">À propos</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>La Mode Haïtienne Redéfinie</h1>
+            <p>Découvrez notre collection exclusive de vêtements premium alliant style contemporain et héritage haïtien. Expédition gratuite vers les États-Unis.</p>
+            <a href="#shop" class="cta-button">Explorer la Collection</a>
+        </div>
+        <div class="canvas-container" id="canvas"></div>
+    </section>
+
+    <section class="products" id="shop">
+        <h2>Nos Produits Phares</h2>
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="/api/placeholder/300/300" alt="T-shirt Premium" />
+                </div>
+                <h3>T-shirt Premium</h3>
+                <p>69.99 USD</p>
+            </div>
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="/api/placeholder/300/300" alt="Maillot Signature" />
+                </div>
+                <h3>Maillot Signature</h3>
+                <p>89.99 USD</p>
+            </div>
+            <div class="product-card">
+                <div class="product-image">
+                    <img src="/api/placeholder/300/300" alt="Tennis Edition Limitée" />
+                </div>
+                <h3>Tennis Edition Limitée</h3>
+                <p>129.99 USD</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Initialisation de Three.js
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 2 / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        const container = document.getElementById('canvas');
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
+
+        // Création d'une sphère 3D interactive
+        const geometry = new THREE.SphereGeometry(3, 64, 64);
+        const material = new THREE.MeshPhongMaterial({
+            color: 0xFF3366,
+            shininess: 100,
+            specular: 0x444444,
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+        scene.add(sphere);
+
+        // Ajout de lumières
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        camera.position.z = 8;
+
+        // Animation de la sphère
+        function animate() {
+            requestAnimationFrame(animate);
+            sphere.rotation.x += 0.01;
+            sphere.rotation.y += 0.01;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Animations GSAP
+        gsap.from(".hero-content", {
+            opacity: 0,
+            y: 100,
+            duration: 1.5,
+            ease: "power4.out"
+        });
+
+        gsap.from(".product-card", {
+            scrollTrigger: {
+                trigger: ".products",
+                start: "top center"
+            },
+            opacity: 0,
+            y: 50,
+            duration: 1,
+            stagger: 0.2
+        });
+
+        // Loader
+        window.addEventListener('load', () => {
+            gsap.to(".loader", {
+                opacity: 0,
+                duration: 1,
+                onComplete: () => {
+                    document.querySelector(".loader").style.display = "none";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
