@@ -4,12 +4,17 @@ const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const loginsHandler = require('./logins').handler;
+const registerHandler = require('./register').handler;
 const shopHandler = require('./shop').handler;
+const panierHandler = require('./panier').handler;
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(helmet());
+app.use(cookieParser());
 
 // En-têtes HTTP
 app.use((req, res, next) => {
@@ -20,7 +25,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Bloquer les requêtes curl et wget
+// Bloquer les requêtes curl, wget, et nmap
 app.use((req, res, next) => {
   const userAgent = req.headers['user-agent'];
   if (userAgent && (userAgent.includes('curl') || userAgent.includes('Wget') || userAgent.includes('nmap'))) {
@@ -44,11 +49,8 @@ app.use((req, res, next) => {
   const routes = {
     '/index.html': '/',
     '/faq.html': '/faq',
-    '/admin.html': '/admin',
-    '/command.html': '/commander',
     '/politique.html': '/Politique-de-confidentialite',
     '/merci.html': '/merci',
-    '/services.html' : '/services'
   };
 
   if (routes[req.url]) {
@@ -67,30 +69,48 @@ app.get('/faq', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'faq.html'));
 });
 
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-app.get('/commander', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'command.html'));
-});
-
 app.get('/Politique-de-confidentialite', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'politique.html'));
-});
-
-app.get('/services', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'services.html'));
 });
 
 app.get('/merci', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'merci.html'));
 });
 
+// Route pour l'inscription
+app.post('/api/register', async (req, res) => {
+  try {
+    const result = await registerHandler({ httpMethod: 'POST', body: JSON.stringify(req.body) });
+    res.status(result.statusCode).send(result.body);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Route pour le login
+app.post('/api/login', async (req, res) => {
+  try {
+    const result = await loginsHandler({ httpMethod: 'POST', body: JSON.stringify(req.body) });
+    res.status(result.statusCode).send(result.body);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Route pour le shop
 app.get('/shop', async (req, res) => {
   try {
-    const result = await shopHandler({ httpMethod: 'GET', queryStringParameters: req.query });
+    const result = await shopHandler({ httpMethod: 'GET', queryStringParameters: req.query, cookies: req.cookies });
+    res.status(result.statusCode).send(result.body);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Route pour le panier
+app.get('/panier', async (req, res) => {
+  try {
+    const result = await panierHandler({ httpMethod: 'GET', cookies: req.cookies });
     res.status(result.statusCode).send(result.body);
   } catch (error) {
     next(error);
